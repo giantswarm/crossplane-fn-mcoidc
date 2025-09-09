@@ -1,9 +1,7 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -74,12 +72,6 @@ func (f *Function) DiscoverAccounts(patchTo string, composed *composite.Composit
 		})
 	}
 
-	b := &bytes.Buffer{}
-
-	if err := json.NewEncoder(b).Encode(&v); err != nil {
-		return fmt.Errorf("cannot encode to JSON: %w", err)
-	}
-
-	err = f.patchFieldValueToObject(patchTo, b.Bytes(), composed.DesiredComposite.Resource)
+	err = f.patchFieldValueToObject(patchTo, v, composed.DesiredComposite.Resource)
 	return err
 }
