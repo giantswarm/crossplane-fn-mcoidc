@@ -56,16 +56,6 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) 
 	return rsp, nil
 }
 
-func (f *Function) getStringFromPaved(req runtime.Object, ref string) (value string, err error) {
-	var paved *fieldpath.Paved
-	if paved, err = fieldpath.PaveObject(req); err != nil {
-		return
-	}
-
-	value, err = paved.GetString(ref)
-	return
-}
-
 func (f *Function) patchFieldValueToObject(fieldPath string, value any, to runtime.Object) (err error) {
 	var paved *fieldpath.Paved
 	if paved, err = fieldpath.PaveObject(to); err != nil {
