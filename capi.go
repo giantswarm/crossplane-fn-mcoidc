@@ -17,6 +17,25 @@ type AccountInfo struct {
 	ProviderConfigRef string `json:"providerConfigRef"`
 }
 
+// DiscoverAccounts discovers AWS accounts by examining ProviderConfig resources and their corresponding AWSCluster resources.
+// It extracts account information from roleARNs in ProviderConfig specs and creates a list of unique accounts
+// to avoid duplicate OIDC configurations.
+//
+// Parameters:
+//   - patchTo: The target path where the discovered account information should be patched
+//   - composed: The composite resource composition to work with
+//
+// Returns:
+//   - error: An error if the discovery process fails, nil otherwise
+//
+// The function performs the following steps:
+// 1. Lists all ProviderConfig resources of type aws.upbound.io/v1beta1
+// 2. Lists all AWSCluster resources of type infrastructure.cluster.x-k8s.io/v1beta2
+// 3. Filters ProviderConfigs to only include those with matching AWSCluster resources
+// 4. Extracts roleARN from each ProviderConfig's webIdentity credentials
+// 5. Parses account IDs from roleARNs and deduplicates them
+// 6. Creates AccountInfo structs containing account ID, role name, and provider config reference
+// 7. Patches the discovered account information to the target path in the composite resource
 func (f *Function) DiscoverAccounts(patchTo string, composed *composite.Composition) error {
 
 	client, err := kclient.Client()
