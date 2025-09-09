@@ -33,11 +33,32 @@ func (f *Function) DiscoverAccounts(patchTo string, composed *composite.Composit
 		return fmt.Errorf("cannot list ProviderConfig resources: %w", err)
 	}
 
-	// Track unique roleARNs to avoid duplicates
-	seenRoleARNs := make(map[string]bool)
+	// get all awsclusters in all namespaces infrastructure.cluster.x-k8s.io/v1beta2 AWSCluster
+	awsClusters := &unstructured.UnstructuredList{}
+	awsClusters.SetAPIVersion("infrastructure.cluster.x-k8s.io/v1beta2")
+	awsClusters.SetKind("AWSCluster")
+
+	if err := client.List(context.Background(), awsClusters); err != nil {
+		return fmt.Errorf("cannot list AWSCluster resources: %w", err)
+	}
+
+	// Track unique account IDs to avoid duplicates (avoid creating OIDC multiple times in the same account)
+	seenAccountIDs := make(map[string]bool)
 	var v []AccountInfo
 
 	for _, item := range providerConfigs.Items {
+		// check if there is any AWScluster with the same name, otherwise skip this ProviderConfig
+		found := false
+		for _, cluster := range awsClusters.Items {
+			if cluster.GetName() == item.GetName() {
+				found = true
+				break
+			}
+		}
+		if !found {
+			continue
+		}
+
 		// Extract roleARN from the ProviderConfig spec
 		roleARN, found, err := unstructured.NestedString(item.Object, "spec", "credentials", "webIdentity", "roleARN")
 		if err != nil || !found || roleARN == "" {
@@ -45,22 +66,24 @@ func (f *Function) DiscoverAccounts(patchTo string, composed *composite.Composit
 			continue
 		}
 
-		// Skip if we've already seen this roleARN
-		if seenRoleARNs[roleARN] {
-			continue
-		}
-		seenRoleARNs[roleARN] = true
-
 		// Extract account ID from roleARN (format: arn:aws:iam::ACCOUNT_ID:role/ROLE_NAME)
 		parts := strings.Split(roleARN, ":")
 		if len(parts) < 5 {
+			f.log.Debug("cannot get account ID from roleARN", "roleARN", roleARN)
 			continue
 		}
 		accountID := parts[4]
 
+		// Skip if we've already seen this account ID
+		if seenAccountIDs[accountID] {
+			continue
+		}
+		seenAccountIDs[accountID] = true
+
 		// Extract role name from roleARN
 		roleParts := strings.Split(roleARN, "/")
 		if len(roleParts) < 2 {
+			f.log.Debug("cannot get role name from roleARN", "roleARN", roleARN)
 			continue
 		}
 		roleName := roleParts[len(roleParts)-1]
