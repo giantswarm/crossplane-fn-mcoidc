@@ -1,0 +1,22 @@
+---
+apiVersion: meta.pkg.crossplane.io/v1beta1
+kind: Function
+metadata:
+  name: crossplane-fn-mcoidc
+spec: {}
+# ---
+# apiVersion: pkg.crossplane.io/v1beta1
+# kind: Function
+# metadata:
+#   name: function-irsa
+# spec:
+#   ignoreCrossplaneConstraints: false
+#   package: gsoci.azurecr.io/giantswarm/crossplane-fn-mcoidc:v0.0.1-dev
+#   packagePullPolicy: Always
+#   revisionActivationPolicy: Automatic
+#   revisionHistoryLimit: 1
+#   runtimeConfigRef:
+#     apiVersion: pkg.crossplane.io/v1beta1
+#     kind: DeploymentRuntimeConfig
+#     name: xfn-irsa
+#   skipDependencyResolution: true
