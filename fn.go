@@ -27,6 +27,12 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) 
 		input    v1beta1.Input
 	)
 
+	// Parse the input from the request
+	if err := request.GetInput(req, &input); err != nil {
+		response.Fatal(rsp, errors.Wrap(err, "cannot get function input"))
+		return rsp, nil
+	}
+
 	if input.Spec == nil {
 		response.Fatal(rsp, &composite.MissingSpec{})
 		return rsp, nil

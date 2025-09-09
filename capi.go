@@ -13,17 +13,17 @@ import (
 	"github.com/giantswarm/xfnlib/pkg/composite"
 )
 
+type AccountInfo struct {
+	AccountID         string `json:"accountId"`
+	RoleName          string `json:"roleName"`
+	ProviderConfigRef string `json:"providerConfigRef"`
+}
+
 func (f *Function) DiscoverAccounts(patchTo string, composed *composite.Composition) error {
 
 	client, err := kclient.Client()
 	if err != nil {
 		return err
-	}
-
-	type AccountInfo struct {
-		AccountID         string `json:"accountId"`
-		RoleName          string `json:"roleName"`
-		ProviderConfigRef string `json:"providerConfigRef"`
 	}
 
 	// Get all ProviderConfig resources
