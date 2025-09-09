@@ -25,4 +25,7 @@ type Input struct {
 type Spec struct {
 	// +required
 	AWSAccountsPatchToRef string `json:"awsAccountsPatchToRef"`
+
+	// +required
+	Name string `json:"name"`
 }

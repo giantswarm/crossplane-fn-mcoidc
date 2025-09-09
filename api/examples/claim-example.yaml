@@ -1,10 +1,10 @@
 apiVersion: crossplane.giantswarm.io/v1
 kind: MCOIDCClaim
 metadata:
-  name: mcname
+  name: golem
   namespace: org-giantswarm
 spec:
   compositionRef:
     name: mcoidc-composition
-  name: mcname
+  name: golem
   awsAccountsPatchToRef: status.awsAccounts

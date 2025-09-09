@@ -36,7 +36,7 @@ type AccountInfo struct {
 // 5. Parses account IDs from roleARNs and deduplicates them
 // 6. Creates AccountInfo structs containing account ID, role name, and provider config reference
 // 7. Patches the discovered account information to the target path in the composite resource
-func (f *Function) DiscoverAccounts(patchTo string, composed *composite.Composition) error {
+func (f *Function) DiscoverAccounts(mcName string, patchTo string, composed *composite.Composition) error {
 
 	client, err := kclient.Client()
 	if err != nil {
@@ -66,6 +66,7 @@ func (f *Function) DiscoverAccounts(patchTo string, composed *composite.Composit
 	var v []AccountInfo
 
 	for _, item := range providerConfigs.Items {
+
 		// check if there is any AWScluster with the same name, otherwise skip this ProviderConfig
 		found := false
 		for _, cluster := range awsClusters.Items {
@@ -75,6 +76,11 @@ func (f *Function) DiscoverAccounts(patchTo string, composed *composite.Composit
 			}
 		}
 		if !found {
+			continue
+		}
+
+		// ignore if the provider config is the same as the mc name, we only need to create OIDC in the WC accounts
+		if item.GetName() == mcName {
 			continue
 		}
 
