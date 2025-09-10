@@ -59,3 +59,5 @@ spec:
                         type: string
                     url:
                       type: string
+                    arn:
+                      type: string
