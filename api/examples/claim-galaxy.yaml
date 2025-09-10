@@ -1,0 +1,11 @@
+apiVersion: crossplane.giantswarm.io/v1
+kind: MCOIDCClaim
+metadata:
+  name: galaxy
+  namespace: org-giantswarm
+spec:
+  compositionRef:
+    name: mcoidc-composition
+  name: galaxy
+  awsAccountsPatchToRef: status.awsAccounts
+  oidcProviderPatchToRef: status.oidcProvider

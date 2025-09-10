@@ -21,6 +21,7 @@ type OIDCProviderInfo struct {
 	ClientIdList   []string `json:"clientIdList"`
 	ThumbprintList []string `json:"thumbprintList"`
 	Url            string   `json:"url"`
+	Arn            string   `json:"arn"`
 }
 
 // DiscoverAccounts discovers AWS accounts by examining ProviderConfig resources and their corresponding AWSCluster resources.
@@ -137,6 +138,7 @@ func (f *Function) GetOIDCProvider(mcName string, patchTo string, composed *comp
 		ClientIdList:   []string{},
 		ThumbprintList: []string{},
 		Url:            "",
+		Arn:            "",
 	}
 
 	client, err := kclient.Client()
@@ -174,6 +176,13 @@ func (f *Function) GetOIDCProvider(mcName string, patchTo string, composed *comp
 				continue
 			}
 			v.Url = url
+
+			arn, found, err := unstructured.NestedString(item.Object, "status", "atProvider", "arn")
+			if err != nil || !found {
+				f.log.Debug("cannot get arn from OIDC Provider", "error", err)
+				continue
+			}
+			v.Arn = arn
 
 			break
 		}
