@@ -69,7 +69,8 @@ func (f *Function) DiscoverAccounts(mcName string, patchTo string, composed *com
 
 	// Track unique account IDs to avoid duplicates (avoid creating OIDC multiple times in the same account)
 	seenAccountIDs := make(map[string]bool)
-	var v []AccountInfo
+	// Initialize as empty slice to ensure it never becomes null
+	v := []AccountInfo{}
 
 	for _, item := range providerConfigs.Items {
 
@@ -131,7 +132,12 @@ func (f *Function) DiscoverAccounts(mcName string, patchTo string, composed *com
 }
 
 func (f *Function) GetOIDCProvider(mcName string, patchTo string, composed *composite.Composition) error {
-	var v OIDCProviderInfo
+	// Initialize with empty slices to ensure fields are never null
+	v := OIDCProviderInfo{
+		ClientIdList:   []string{},
+		ThumbprintList: []string{},
+		Url:            "",
+	}
 
 	client, err := kclient.Client()
 	if err != nil {
