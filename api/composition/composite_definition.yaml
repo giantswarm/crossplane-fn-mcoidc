@@ -44,8 +44,6 @@ spec:
                     properties:
                       accountId:
                         type: string
-                      roleName:
-                        type: string
                       providerConfigRef:
                         type: string
                 oidcProvider:

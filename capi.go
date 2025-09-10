@@ -13,7 +13,6 @@ import (
 
 type AccountInfo struct {
 	AccountID         string `json:"accountId"`
-	RoleName          string `json:"roleName"`
 	ProviderConfigRef string `json:"providerConfigRef"`
 }
 
@@ -68,6 +67,26 @@ func (f *Function) DiscoverAccounts(mcName string, patchTo string, composed *com
 		return fmt.Errorf("cannot list AWSCluster resources: %w", err)
 	}
 
+	// Get MC's AWS account ID to filter it out from results
+	var mcAccountID string
+	for _, item := range providerConfigs.Items {
+		if item.GetName() == mcName {
+			roleARN, found, err := unstructured.NestedString(item.Object, "spec", "credentials", "webIdentity", "roleARN")
+			if err != nil || !found || roleARN == "" {
+				f.log.Debug("cannot get roleARN from MC ProviderConfig", "error", err)
+				break
+			}
+
+			// Extract account ID from roleARN (format: arn:aws:iam::ACCOUNT_ID:role/ROLE_NAME)
+			parts := strings.Split(roleARN, ":")
+			if len(parts) >= 5 {
+				mcAccountID = parts[4]
+				f.log.Debug("Found MC account ID", "accountID", mcAccountID)
+			}
+			break
+		}
+	}
+
 	// Track unique account IDs to avoid duplicates (avoid creating OIDC multiple times in the same account)
 	seenAccountIDs := make(map[string]bool)
 	// Initialize as empty slice to ensure it never becomes null
@@ -87,11 +106,6 @@ func (f *Function) DiscoverAccounts(mcName string, patchTo string, composed *com
 			continue
 		}
 
-		// ignore if the provider config is the same as the mc name, we only need to create OIDC in the WC accounts
-		if item.GetName() == mcName {
-			continue
-		}
-
 		// Extract roleARN from the ProviderConfig spec
 		roleARN, found, err := unstructured.NestedString(item.Object, "spec", "credentials", "webIdentity", "roleARN")
 		if err != nil || !found || roleARN == "" {
@@ -107,23 +121,20 @@ func (f *Function) DiscoverAccounts(mcName string, patchTo string, composed *com
 		}
 		accountID := parts[4]
 
+		// Skip if this account ID matches the MC's account ID
+		if accountID == mcAccountID {
+			f.log.Debug("Skipping account that matches MC account", "accountID", accountID)
+			continue
+		}
+
 		// Skip if we've already seen this account ID
 		if seenAccountIDs[accountID] {
 			continue
 		}
 		seenAccountIDs[accountID] = true
 
-		// Extract role name from roleARN
-		roleParts := strings.Split(roleARN, "/")
-		if len(roleParts) < 2 {
-			f.log.Debug("cannot get role name from roleARN", "roleARN", roleARN)
-			continue
-		}
-		roleName := roleParts[len(roleParts)-1]
-
 		v = append(v, AccountInfo{
 			AccountID:         accountID,
-			RoleName:          roleName,
 			ProviderConfigRef: item.GetName(),
 		})
 	}
