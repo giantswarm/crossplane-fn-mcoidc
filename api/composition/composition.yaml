@@ -57,7 +57,8 @@ spec:
                 kind       = "OpenIDConnectProvider"
                 metadata.name = "${composition_name}-${aws_account.accountId}-oidc"
                 metadata.annotations = {
-                  "crossplane.io/external-name" = oidc_provider.arn
+                  # Calculate the external name by replacing the MC account ID in the ARN for the WC account ID
+                  "crossplane.io/external-name" = oidc_provider.arn.replace(oidc_provider.arn.split(":")[4], aws_account.accountId) if oidc_provider.arn else ""
                 }
                 spec = {
                     providerConfigRef.name = aws_account.providerConfigRef
