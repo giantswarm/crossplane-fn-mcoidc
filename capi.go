@@ -17,6 +17,12 @@ type AccountInfo struct {
 	ProviderConfigRef string `json:"providerConfigRef"`
 }
 
+type OIDCProviderInfo struct {
+	ClientIdList   []string `json:"clientIdList"`
+	ThumbprintList []string `json:"thumbprintList"`
+	Url            string   `json:"url"`
+}
+
 // DiscoverAccounts discovers AWS accounts by examining ProviderConfig resources and their corresponding AWSCluster resources.
 // It extracts account information from roleARNs in ProviderConfig specs and creates a list of unique accounts
 // to avoid duplicate OIDC configurations.
@@ -118,6 +124,57 @@ func (f *Function) DiscoverAccounts(mcName string, patchTo string, composed *com
 			RoleName:          roleName,
 			ProviderConfigRef: item.GetName(),
 		})
+	}
+
+	err = f.patchFieldValueToObject(patchTo, v, composed.DesiredComposite.Resource)
+	return err
+}
+
+func (f *Function) GetOIDCProvider(mcName string, patchTo string, composed *composite.Composition) error {
+	var v OIDCProviderInfo
+
+	client, err := kclient.Client()
+	if err != nil {
+		return err
+	}
+
+	oidcProviders := &unstructured.UnstructuredList{}
+	oidcProviders.SetAPIVersion("iam.aws.upbound.io/v1beta1")
+	oidcProviders.SetKind("OpenIDConnectProvider")
+
+	if err := client.List(context.Background(), oidcProviders); err != nil {
+		return fmt.Errorf("cannot list OpenIDConnectProvider resources: %w", err)
+	}
+
+	for _, item := range oidcProviders.Items {
+		if item.GetLabels()["crossplane.io/claim-name"] == mcName {
+			clientIdList, found, err := unstructured.NestedStringSlice(item.Object, "spec", "forProvider", "clientIdList")
+			if err != nil || !found {
+				f.log.Debug("cannot get clientIdList from OIDC Provider", "error", err)
+				continue
+			}
+			v.ClientIdList = clientIdList
+
+			thumbprintList, found, err := unstructured.NestedStringSlice(item.Object, "spec", "forProvider", "thumbprintList")
+			if err != nil || !found {
+				f.log.Debug("cannot get thumbprintList from OIDC Provider", "error", err)
+				continue
+			}
+			v.ThumbprintList = thumbprintList
+
+			url, found, err := unstructured.NestedString(item.Object, "spec", "forProvider", "url")
+			if err != nil || !found {
+				f.log.Debug("cannot get url from OIDC Provider", "error", err)
+				continue
+			}
+			v.Url = url
+
+			break
+		}
+	}
+	// print an error if no OIDC provider is found
+	if len(oidcProviders.Items) == 0 {
+		return fmt.Errorf("no OIDC provider found for MC %s", mcName)
 	}
 
 	err = f.patchFieldValueToObject(patchTo, v, composed.DesiredComposite.Resource)

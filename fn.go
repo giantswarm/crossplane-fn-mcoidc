@@ -61,6 +61,11 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) 
 		return rsp, nil
 	}
 
+	if err = f.GetOIDCProvider(mcName, input.Spec.OIDCProviderPatchToRef, composed); err != nil {
+		response.Fatal(rsp, errors.Wrapf(err, "cannot get OIDC provider"))
+		return rsp, nil
+	}
+
 	if err = composed.ToResponse(rsp); err != nil {
 		response.Fatal(rsp, errors.Wrapf(err, "cannot convert composition to response %T", rsp))
 		return

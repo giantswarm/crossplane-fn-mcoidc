@@ -27,5 +27,8 @@ type Spec struct {
 	AWSAccountsPatchToRef string `json:"awsAccountsPatchToRef"`
 
 	// +required
+	OIDCProviderPatchToRef string `json:"oidcProviderPatchToRef"`
+
+	// +required
 	Name string `json:"name"`
 }

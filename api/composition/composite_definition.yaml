@@ -27,9 +27,13 @@ spec:
                 awsAccountsPatchToRef:
                   type: string
                   description: "Path to the field in the status to patch the AWS accounts"
+                oidcProviderPatchToRef:
+                  type: string
+                  description: "Path to the field in the status to patch the OIDC provider"
               required:
                 - name
                 - awsAccountsPatchToRef
+                - oidcProviderPatchToRef
             status:
               type: object
               properties:
@@ -44,3 +48,16 @@ spec:
                         type: string
                       providerConfigRef:
                         type: string
+                oidcProvider:
+                  type: object
+                  properties:
+                    clientIdList:
+                      type: array
+                      items:
+                        type: string
+                    thumbprintList:
+                      type: array
+                      items:
+                        type: string
+                    url:
+                      type: string

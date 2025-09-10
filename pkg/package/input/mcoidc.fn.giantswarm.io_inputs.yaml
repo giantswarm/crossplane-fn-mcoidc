@@ -44,8 +44,14 @@ spec:
             properties:
               awsAccountsPatchToRef:
                 type: string
+              name:
+                type: string
+              oidcProviderPatchToRef:
+                type: string
             required:
             - awsAccountsPatchToRef
+            - name
+            - oidcProviderPatchToRef
             type: object
         type: object
     served: true
