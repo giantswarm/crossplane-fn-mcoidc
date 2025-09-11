@@ -44,8 +44,8 @@ spec:
                     properties:
                       accountId:
                         type: string
-                      providerConfigRef:
-                        type: string
+                      providerConfigSpec:
+                        type: object
                 oidcProvider:
                   type: object
                   properties:

@@ -12,8 +12,8 @@ import (
 )
 
 type AccountInfo struct {
-	AccountID         string `json:"accountId"`
-	ProviderConfigRef string `json:"providerConfigRef"`
+	AccountID          string         `json:"accountId"`
+	ProviderConfigSpec map[string]any `json:"providerConfigSpec"`
 }
 
 type OIDCProviderInfo struct {
@@ -134,8 +134,8 @@ func (f *Function) DiscoverAccounts(mcName string, patchTo string, composed *com
 		seenAccountIDs[accountID] = true
 
 		v = append(v, AccountInfo{
-			AccountID:         accountID,
-			ProviderConfigRef: item.GetName(),
+			AccountID:          accountID,
+			ProviderConfigSpec: item.Object["spec"].(map[string]any),
 		})
 	}
 

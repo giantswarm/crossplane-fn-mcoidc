@@ -1,0 +1,11 @@
+apiVersion: crossplane.giantswarm.io/v1
+kind: MCOIDCClaim
+metadata:
+  name: grizzly
+  namespace: org-giantswarm
+spec:
+  compositionRef:
+    name: mcoidc-composition
+  name: grizzly
+  awsAccountsPatchToRef: status.awsAccounts
+  oidcProviderPatchToRef: status.oidcProvider

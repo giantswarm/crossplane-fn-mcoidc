@@ -45,23 +45,31 @@ spec:
           # Common variables extracted from the XR                                                       
           # ---------------------------------------------------------------------------
           composition_name = oxr?.metadata?.name or ""
+          mc_name = oxr?.spec?.name or ""
 
           # ---------------------------------------------------------------------------
           # Managed resources
           # ---------------------------------------------------------------------------
-          _resources = []
-          
-          _resources = [ 
+          providerconfigs = [
+            {
+                apiVersion = "aws.upbound.io/v1beta1"
+                kind       = "ProviderConfig"
+                metadata.name = "${mc_name}-${aws_account.accountId}"
+                spec = aws_account.providerConfigSpec
+            } for aws_account in aws_accounts
+          ]
+
+          openidconnectproviders = [ 
             {
                 apiVersion = "iam.aws.upbound.io/v1beta1"
                 kind       = "OpenIDConnectProvider"
-                metadata.name = "${composition_name}-${aws_account.accountId}-oidc"
+                metadata.name = "${mc_name}-${aws_account.accountId}-oidc"
                 metadata.annotations = {
                   # Calculate the external name by replacing the MC account ID in the ARN for the WC account ID
                   "crossplane.io/external-name" = oidc_provider.arn.replace(oidc_provider.arn.split(":")[4], aws_account.accountId) if oidc_provider.arn else ""
                 }
                 spec = {
-                    providerConfigRef.name = aws_account.providerConfigRef
+                    providerConfigRef.name = "${mc_name}-${aws_account.accountId}"
                     forProvider = {
                         url            = oidc_provider.url
                         clientIdList   = oidc_provider.clientIdList
@@ -71,7 +79,7 @@ spec:
             } for aws_account in aws_accounts
           ]
           
-          items = _resources
+          items = openidconnectproviders + providerconfigs
 
   - step: automatically-detect-ready-composed-resources
     functionRef:
