@@ -58,6 +58,9 @@ spec:
                 apiVersion = "aws.upbound.io/v1beta1"
                 kind       = "ProviderConfig"
                 metadata.name = "${mc_name}-${aws_account.accountId}"
+                metadata.annotations = {
+                  "krm.kcl.dev/ready": "True"
+                }
                 spec = {
                   assumeRoleChain = [
                     {
