@@ -55,7 +55,14 @@ spec:
                 apiVersion = "aws.upbound.io/v1beta1"
                 kind       = "ProviderConfig"
                 metadata.name = "${mc_name}-${aws_account.accountId}"
-                spec = aws_account.providerConfigSpec
+                spec = {
+                  source = "Secret"
+                  secretRef = {
+                    name = "capa-iam-operator-aws-credentials"
+                    namespace = "giantswarm"
+                    key = "credentials"
+                  }
+                }
             } for aws_account in aws_accounts
           ]
 

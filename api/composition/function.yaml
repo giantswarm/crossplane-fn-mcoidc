@@ -4,7 +4,7 @@ kind: Function
 metadata:
   name: function-mcoidc
 spec:
-  package: gsoci.azurecr.io/giantswarm/crossplane-fn-mcoidc:v0.0.40-dev
+  package: gsoci.azurecr.io/giantswarm/crossplane-fn-mcoidc:v0.0.41-dev
   runtimeConfigRef:
     name: xfn-mcoidc
   skipDependencyResolution: true

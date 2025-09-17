@@ -44,19 +44,6 @@ spec:
                     properties:
                       accountId:
                         type: string
-                      providerConfigSpec:
-                        type: object
-                        properties:
-                          credentials:
-                            type: object
-                            properties:
-                              source:
-                                type: string
-                              webIdentity:
-                                type: object
-                                properties:
-                                  roleARN:
-                                    type: string
                 oidcProvider:
                   type: object
                   properties:

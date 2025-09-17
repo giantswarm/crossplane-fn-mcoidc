@@ -12,8 +12,7 @@ import (
 )
 
 type AccountInfo struct {
-	AccountID          string                 `json:"accountId"`
-	ProviderConfigSpec map[string]interface{} `json:"providerConfigSpec"`
+	AccountID string `json:"accountId"`
 }
 
 type OIDCProviderInfo struct {
@@ -133,14 +132,8 @@ func (f *Function) DiscoverAccounts(mcName string, patchTo string, composed *com
 		}
 		seenAccountIDs[accountID] = true
 
-		providerConfigSpec, found, err := unstructured.NestedMap(item.Object, "spec")
-		if err != nil || !found {
-			f.log.Debug("cannot get spec from ProviderConfig", "error", err)
-			continue
-		}
 		v = append(v, AccountInfo{
-			AccountID:          accountID,
-			ProviderConfigSpec: providerConfigSpec,
+			AccountID: accountID,
 		})
 	}
 
