@@ -20,6 +20,7 @@ spec:
         awsAccountsPatchToRef: status.awsAccounts
         oidcProviderPatchToRef: status.oidcProvider
         name: spec.name
+
   - step: render-resources
     functionRef:
       name: function-kcl
@@ -47,6 +48,8 @@ spec:
           composition_name = oxr?.metadata?.name or ""
           mc_name = oxr?.spec?.name or ""
 
+          partition = oidc_provider.arn.split(":")[1] if oidc_provider.arn else ""
+
           # ---------------------------------------------------------------------------
           # Managed resources
           # ---------------------------------------------------------------------------
@@ -56,11 +59,18 @@ spec:
                 kind       = "ProviderConfig"
                 metadata.name = "${mc_name}-${aws_account.accountId}"
                 spec = {
-                  source = "Secret"
-                  secretRef = {
-                    name = "capa-iam-operator-aws-credentials"
-                    namespace = "giantswarm"
-                    key = "credentials"
+                  assumeRoleChain = [
+                    {
+                      roleARN = "arn:${partition}:iam::${aws_account.accountId}:role/giantswarm-${mc_name}-capa-controller"
+                    }
+                  ]
+                  credentials = {
+                    source = "Secret"
+                    secretRef = {
+                      name = "capa-iam-operator-aws-credentials"
+                      namespace = "giantswarm"
+                      key = "credentials"
+                    }
                   }
                 }
             } for aws_account in aws_accounts
