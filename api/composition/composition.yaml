@@ -86,7 +86,7 @@ spec:
                 metadata.name = "${mc_name}-${aws_account.accountId}-oidc"
                 metadata.annotations = {
                   # Calculate the external name by replacing the MC account ID in the ARN for the WC account ID
-                  "crossplane.io/external-name" = oidc_provider.arn.replace(oidc_provider.arn.split(":")[4], aws_account.accountId) if oidc_provider.arn else ""
+                  "crossplane.io/external-name" = oidc_provider.arn.split("/")[0].replace(oidc_provider.arn.split(":")[4], aws_account.accountId)+ "/" + "/".join(oidc_provider.arn.split("/")[1:]) if oidc_provider.arn else ""
                 }
                 spec = {
                     providerConfigRef.name = "${mc_name}-${aws_account.accountId}"
