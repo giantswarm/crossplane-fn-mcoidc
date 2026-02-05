@@ -16,6 +16,8 @@ workflows:
           context:
             - architect
           filters:
+            branches:
+              ignore: /.*/
             tags:
               only: /^v.*/
 
@@ -31,7 +33,6 @@ jobs:
             REGISTRY_SERVER=gsoci.azurecr.io
             REGISTRY=${REGISTRY_SERVER}/giantswarm
             echo "$ACR_GSOCI_PASSWORD" | docker login --username $ACR_GSOCI_USERNAME --password-stdin ${REGISTRY_SERVER}
-            [ -z "${CIRCLE_TAG}" ] && CIRCLE_TAG=v0.0.41-dev
 
             curl -sL https://raw.githubusercontent.com/crossplane/crossplane/master/install.sh | sh
 
