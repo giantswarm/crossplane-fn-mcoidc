@@ -25,10 +25,10 @@ spec:
               projected:
                 defaultMode: 420
                 sources:
-                  - serviceAccountToken:
-                      audience: sts.amazonaws.com
-                      expirationSeconds: 86400
-                      path: token
+                - serviceAccountToken:
+                    audience: sts.amazonaws.com
+                    expirationSeconds: 86400
+                    path: token
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -42,28 +42,28 @@ metadata:
   name: xfn-mcoidc
   namespace: crossplane
 rules:
-  - apiGroups:
-      - aws.upbound.io
-    resources:
-      - providerconfigs
-    verbs:
-      - get
-      - list
-  - apiGroups:
-      - infrastructure.cluster.x-k8s.io
-    resources:
-      - awsclusters
-      - awsmanagedclusters
-    verbs:
-      - get
-      - list
-  - apiGroups:
-      - iam.aws.upbound.io
-    resources:
-      - openidconnectproviders
-    verbs:
-      - get
-      - list
+- apiGroups:
+  - aws.upbound.io
+  resources:
+  - providerconfigs
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - infrastructure.cluster.x-k8s.io
+  resources:
+  - awsclusters
+  - awsmanagedclusters
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - iam.aws.upbound.io
+  resources:
+  - openidconnectproviders
+  verbs:
+  - get
+  - list
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -71,9 +71,9 @@ metadata:
   name: xfn-mcoidc
   namespace: crossplane
 subjects:
-  - kind: ServiceAccount
-    name: xfn-mcoidc
-    namespace: crossplane
+- kind: ServiceAccount
+  name: xfn-mcoidc
+  namespace: crossplane
 roleRef:
   kind: ClusterRole
   name: xfn-mcoidc
