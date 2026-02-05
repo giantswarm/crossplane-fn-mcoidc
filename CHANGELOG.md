@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
 
+- Add support for AWSManagedClusters alongside AWSClusters for account discovery.
 
 [Unreleased]: https://github.com/giantswarm/REPOSITORY_NAME/tree/main

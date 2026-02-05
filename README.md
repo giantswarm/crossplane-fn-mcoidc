@@ -13,8 +13,8 @@ The function operates through the following sequence:
 ```
 1. Discovery Phase (crossplane-fn-mcoidc)
    - List all ProviderConfig resources (aws.upbound.io/v1beta1)
-   - List all AWSCluster resources (infrastructure.cluster.x-k8s.io/v1beta2)
-   - Filter ProviderConfigs with matching AWSCluster resources
+   - List all AWSCluster and AWSManagedCluster resources (infrastructure.cluster.x-k8s.io/v1beta2)
+   - Filter ProviderConfigs with matching AWSCluster or AWSManagedCluster resources
    - Extract and deduplicate AWS account IDs from roleARNs
    - Retrieve OIDC provider details from existing MC resources
     ↓
@@ -33,7 +33,7 @@ The function operates through the following sequence:
 
 The function implements intelligent account discovery to identify target AWS accounts for OIDC setup:
 
-1. **Resource Enumeration**: Lists all ProviderConfig resources in the cluster and matches them with corresponding AWSCluster resources
+1. **Resource Enumeration**: Lists all ProviderConfig resources in the cluster and matches them with corresponding AWSCluster or AWSManagedCluster resources
 2. **Account Extraction**: Parses roleARNs from ProviderConfig specs to extract AWS account IDs using the format `arn:aws:iam::ACCOUNT_ID:role/ROLE_NAME`
 3. **Filtering**: Excludes the Management Cluster's own account ID to prevent self-referential configurations
 4. **Deduplication**: Maintains a unique set of account IDs to avoid creating multiple OIDC providers in the same account
