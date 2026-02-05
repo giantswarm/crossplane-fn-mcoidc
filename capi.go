@@ -22,7 +22,7 @@ type OIDCProviderInfo struct {
 	Arn            string   `json:"arn"`
 }
 
-// DiscoverAccounts discovers AWS accounts by examining ProviderConfig resources and their corresponding AWSCluster resources.
+// DiscoverAccounts discovers AWS accounts by examining ProviderConfig resources and their corresponding AWSCluster or AWSManagedCluster resources.
 // It extracts account information from roleARNs in ProviderConfig specs and creates a list of unique accounts
 // to avoid duplicate OIDC configurations.
 //
@@ -35,8 +35,8 @@ type OIDCProviderInfo struct {
 //
 // The function performs the following steps:
 // 1. Lists all ProviderConfig resources of type aws.upbound.io/v1beta1
-// 2. Lists all AWSCluster resources of type infrastructure.cluster.x-k8s.io/v1beta2
-// 3. Filters ProviderConfigs to only include those with matching AWSCluster resources
+// 2. Lists all AWSCluster and AWSManagedCluster resources of type infrastructure.cluster.x-k8s.io/v1beta2
+// 3. Filters ProviderConfigs to only include those with matching AWSCluster or AWSManagedCluster resources
 // 4. Extracts roleARN from each ProviderConfig's webIdentity credentials
 // 5. Parses account IDs from roleARNs and deduplicates them
 // 6. Creates AccountInfo structs containing account ID, role name, and provider config reference
@@ -66,6 +66,15 @@ func (f *Function) DiscoverAccounts(mcName string, patchTo string, composed *com
 		return fmt.Errorf("cannot list AWSCluster resources: %w", err)
 	}
 
+	// get all awsmanagedclusters in all namespaces infrastructure.cluster.x-k8s.io/v1beta2 AWSManagedCluster
+	awsManagedClusters := &unstructured.UnstructuredList{}
+	awsManagedClusters.SetAPIVersion("infrastructure.cluster.x-k8s.io/v1beta2")
+	awsManagedClusters.SetKind("AWSManagedCluster")
+
+	if err := client.List(context.Background(), awsManagedClusters); err != nil {
+		return fmt.Errorf("cannot list AWSManagedCluster resources: %w", err)
+	}
+
 	// Get MC's AWS account ID to filter it out from results
 	var mcAccountID string
 	for _, item := range providerConfigs.Items {
@@ -93,12 +102,20 @@ func (f *Function) DiscoverAccounts(mcName string, patchTo string, composed *com
 
 	for _, item := range providerConfigs.Items {
 
-		// check if there is any AWScluster with the same name, otherwise skip this ProviderConfig
+		// check if there is any AWSCluster or AWSManagedCluster with the same name, otherwise skip this ProviderConfig
 		found := false
 		for _, cluster := range awsClusters.Items {
 			if cluster.GetName() == item.GetName() {
 				found = true
 				break
+			}
+		}
+		if !found {
+			for _, cluster := range awsManagedClusters.Items {
+				if cluster.GetName() == item.GetName() {
+					found = true
+					break
+				}
 			}
 		}
 		if !found {
