@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
+	"github.com/crossplane/crossplane-runtime/pkg/logging"
 	kclient "github.com/giantswarm/xfnlib/pkg/auth/kubernetes"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
@@ -20,6 +22,43 @@ type OIDCProviderInfo struct {
 	ThumbprintList []string `json:"thumbprintList"`
 	Url            string   `json:"url"`
 	Arn            string   `json:"arn"`
+}
+
+func extractAWSAccountIDFromProviderConfig(item unstructured.Unstructured, log logging.Logger) (string, error) {
+	assumeRoleChain, found, err := unstructured.NestedFieldNoCopy(item.Object, "spec", "assumeRoleChain")
+	if found && assumeRoleChain != nil {
+		if assumeRoleChainArray, ok := assumeRoleChain.([]interface{}); ok && len(assumeRoleChainArray) == 1 {
+			if assumeRoleFirstItem, ok := assumeRoleChainArray[0].(map[string]interface{}); ok {
+				if roleARN, ok := assumeRoleFirstItem["roleARN"].(string); ok && roleARN != "" {
+					// Extract account ID from roleARN (format: arn:aws:iam::ACCOUNT_ID:role/ROLE_NAME)
+					parts := strings.Split(roleARN, ":")
+					if len(parts) >= 5 {
+						accountID := parts[4]
+						log.Debug("Found account ID in role chain", "accountID", accountID)
+						return accountID, nil
+					}
+				}
+			}
+		}
+	} else if err != nil {
+		log.Debug("failed to get roleARN from ProviderConfig in role chain", "error", err)
+	}
+
+	// Previous method, using IRSA
+	roleARN, found, err := unstructured.NestedString(item.Object, "spec", "credentials", "webIdentity", "roleARN")
+	if found && roleARN != "" {
+		// Extract account ID from roleARN (format: arn:aws:iam::ACCOUNT_ID:role/ROLE_NAME)
+		parts := strings.Split(roleARN, ":")
+		if len(parts) >= 5 {
+			accountID := parts[4]
+			log.Debug("Found account ID in IRSA role", "accountID", accountID)
+			return accountID, nil
+		}
+	} else if err != nil {
+		log.Debug("failed to get roleARN from ProviderConfig in IRSA role", "error", err)
+	}
+
+	return "", errors.New("could not find account ID in ProviderConfig")
 }
 
 // DiscoverAccounts discovers AWS accounts by examining ProviderConfig resources and their corresponding AWSCluster or AWSManagedCluster resources.
@@ -78,21 +117,18 @@ func (f *Function) DiscoverAccounts(mcName string, patchTo string, composed *com
 	// Get MC's AWS account ID to filter it out from results
 	var mcAccountID string
 	for _, item := range providerConfigs.Items {
-		if item.GetName() == mcName {
-			roleARN, found, err := unstructured.NestedString(item.Object, "spec", "credentials", "webIdentity", "roleARN")
-			if err != nil || !found || roleARN == "" {
-				f.log.Debug("cannot get roleARN from MC ProviderConfig", "error", err)
-				break
-			}
-
-			// Extract account ID from roleARN (format: arn:aws:iam::ACCOUNT_ID:role/ROLE_NAME)
-			parts := strings.Split(roleARN, ":")
-			if len(parts) >= 5 {
-				mcAccountID = parts[4]
-				f.log.Debug("Found MC account ID", "accountID", mcAccountID)
-			}
-			break
+		if item.GetName() != mcName {
+			continue
 		}
+
+		mcAccountID, err = extractAWSAccountIDFromProviderConfig(item, f.log)
+		if err != nil {
+			f.log.Debug("failed to get roleARN for MC in ProviderConfig", "error", err)
+			return err
+		}
+	}
+	if mcAccountID == "" {
+		return errors.New("could not find roleARN for MC")
 	}
 
 	// Track unique account IDs to avoid duplicates (avoid creating OIDC multiple times in the same account)
@@ -101,7 +137,6 @@ func (f *Function) DiscoverAccounts(mcName string, patchTo string, composed *com
 	v := []AccountInfo{}
 
 	for _, item := range providerConfigs.Items {
-
 		// check if there is any AWSCluster or AWSManagedCluster with the same name, otherwise skip this ProviderConfig
 		found := false
 		for _, cluster := range awsClusters.Items {
@@ -122,20 +157,11 @@ func (f *Function) DiscoverAccounts(mcName string, patchTo string, composed *com
 			continue
 		}
 
-		// Extract roleARN from the ProviderConfig spec
-		roleARN, found, err := unstructured.NestedString(item.Object, "spec", "credentials", "webIdentity", "roleARN")
-		if err != nil || !found || roleARN == "" {
-			f.log.Debug("cannot get roleARN from ProviderConfig", "error", err)
+		accountID, err := extractAWSAccountIDFromProviderConfig(item, f.log)
+		if err != nil {
+			f.log.Debug("failed to get roleARN from ProviderConfig", "error", err)
 			continue
 		}
-
-		// Extract account ID from roleARN (format: arn:aws:iam::ACCOUNT_ID:role/ROLE_NAME)
-		parts := strings.Split(roleARN, ":")
-		if len(parts) < 5 {
-			f.log.Debug("cannot get account ID from roleARN", "roleARN", roleARN)
-			continue
-		}
-		accountID := parts[4]
 
 		// Skip if this account ID matches the MC's account ID
 		if accountID == mcAccountID {
