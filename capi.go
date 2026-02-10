@@ -79,18 +79,40 @@ func (f *Function) DiscoverAccounts(mcName string, patchTo string, composed *com
 	var mcAccountID string
 	for _, item := range providerConfigs.Items {
 		if item.GetName() == mcName {
-			roleARN, found, err := unstructured.NestedString(item.Object, "spec", "credentials", "webIdentity", "roleARN")
-			if err != nil || !found || roleARN == "" {
-				f.log.Debug("cannot get roleARN from MC ProviderConfig", "error", err)
-				break
+			assumeRoleChain, found, err := unstructured.NestedFieldNoCopy(item.Object, "spec", "assumeRoleChain")
+			if found && assumeRoleChain != nil {
+				if assumeRoleChainArray, ok := assumeRoleChain.([]interface{}); ok && len(assumeRoleChainArray) == 1 {
+					if assumeRoleFirstItem, ok := assumeRoleChainArray[0].(map[string]interface{}); ok {
+						if roleARN, ok := assumeRoleFirstItem["roleARN"].(string); ok && roleARN != "" {
+							// Extract account ID from roleARN (format: arn:aws:iam::ACCOUNT_ID:role/ROLE_NAME)
+							parts := strings.Split(roleARN, ":")
+							if len(parts) >= 5 {
+								mcAccountID = parts[4]
+								f.log.Debug("Found MC account ID in role chain", "accountID", mcAccountID)
+							}
+							break
+						}
+					}
+				}
+			} else if err != nil {
+				f.log.Debug("failed to get roleARN from MC ProviderConfig in role chain", "error", err)
 			}
 
-			// Extract account ID from roleARN (format: arn:aws:iam::ACCOUNT_ID:role/ROLE_NAME)
-			parts := strings.Split(roleARN, ":")
-			if len(parts) >= 5 {
-				mcAccountID = parts[4]
-				f.log.Debug("Found MC account ID", "accountID", mcAccountID)
+			// Previous method, using IRSA
+			roleARN, found, err := unstructured.NestedString(item.Object, "spec", "credentials", "webIdentity", "roleARN")
+			if found && roleARN != "" {
+				// Extract account ID from roleARN (format: arn:aws:iam::ACCOUNT_ID:role/ROLE_NAME)
+				parts := strings.Split(roleARN, ":")
+				if len(parts) >= 5 {
+					mcAccountID = parts[4]
+					f.log.Debug("Found MC account ID in IRSA role", "accountID", mcAccountID)
+				}
+				break
+			} else if err != nil {
+				f.log.Debug("failed to get roleARN from MC ProviderConfig in IRSA role", "error", err)
 			}
+
+			f.log.Debug("could not find MC account ID in MC ProviderConfig")
 			break
 		}
 	}
