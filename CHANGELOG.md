@@ -12,5 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Add support for AWSManagedClusters alongside AWSClusters for account discovery.
+- Move Crossplane manifests (Function, XRD, Composition, RuntimeConfig) into Helm chart with configurable values.
+
+### Changed
+
+- Use proper versioning when pushing the Crossplane function image.
 
 [Unreleased]: https://github.com/giantswarm/crossplane-fn-mcoidc/tree/main

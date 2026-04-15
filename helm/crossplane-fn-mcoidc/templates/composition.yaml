@@ -1,0 +1,108 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: {{ .Values.composition.name }}
+  labels:
+    {{- include "labels.common" . | nindent 4 }}
+spec:
+  compositeTypeRef:
+    apiVersion: crossplane.giantswarm.io/v1
+    kind: MCOIDC
+  mode: Pipeline
+  pipeline:
+  - step: mcoidc-discovery
+    functionRef:
+      name: {{ .Values.function.name }}
+    input:
+      apiVersion: mcoidc.fn.giantswarm.io
+      kind: Input
+      metadata:
+        namespace: {{ .Values.runtimeConfig.namespace }}
+      spec:
+        awsAccountsPatchToRef: status.awsAccounts
+        oidcProviderPatchToRef: status.oidcProvider
+        name: spec.name
+
+  - step: render-resources
+    functionRef:
+      name: {{ .Values.composition.kclFunctionRef }}
+    input:
+      apiVersion: krm.kcl.dev/v1alpha1
+      kind: KCLRun
+      metadata:
+        name: irsa
+      spec:
+        target: Resources
+        source: |
+          # ---------------------------------------------------------------------------
+          # Input shorthands
+          # ---------------------------------------------------------------------------
+          oxr  = option("params")?.oxr          # Observed  Composite Resource (XR)
+          dxr  = option("params")?.dxr          # Desired   Composite Resource (XR)
+          ocds = option("params")?.ocds or {}   # Observed  Composed Resources map
+
+          oidc_provider = oxr?.status?.oidcProvider or {}
+          aws_accounts = oxr?.status?.awsAccounts or []
+
+          # ---------------------------------------------------------------------------
+          # Common variables extracted from the XR
+          # ---------------------------------------------------------------------------
+          composition_name = oxr?.metadata?.name or ""
+          mc_name = oxr?.spec?.name or ""
+
+          partition = oidc_provider.arn.split(":")[1] if oidc_provider.arn else ""
+
+          # ---------------------------------------------------------------------------
+          # Managed resources
+          # ---------------------------------------------------------------------------
+          providerconfigs = [
+            {
+                apiVersion = "aws.upbound.io/v1beta1"
+                kind       = "ProviderConfig"
+                metadata.name = "${mc_name}-${aws_account.accountId}"
+                metadata.annotations = {
+                  "krm.kcl.dev/ready": "True"
+                }
+                spec = {
+                  assumeRoleChain = [
+                    {
+                      roleARN = "arn:${partition}:iam::${aws_account.accountId}:role/giantswarm-${mc_name}-capa-controller"
+                    }
+                  ]
+                  credentials = {
+                    source = "Secret"
+                    secretRef = {
+                      name = "capa-iam-operator-aws-credentials"
+                      namespace = "giantswarm"
+                      key = "credentials"
+                    }
+                  }
+                }
+            } for aws_account in aws_accounts
+          ]
+
+          openidconnectproviders = [
+            {
+                apiVersion = "iam.aws.upbound.io/v1beta1"
+                kind       = "OpenIDConnectProvider"
+                metadata.name = "${mc_name}-${aws_account.accountId}-oidc"
+                metadata.annotations = {
+                  # Calculate the external name by replacing the MC account ID in the ARN for the WC account ID
+                  "crossplane.io/external-name" = oidc_provider.arn.split("/")[0].replace(oidc_provider.arn.split(":")[4], aws_account.accountId)+ "/" + "/".join(oidc_provider.arn.split("/")[1:]) if oidc_provider.arn else ""
+                }
+                spec = {
+                    providerConfigRef.name = "${mc_name}-${aws_account.accountId}"
+                    forProvider = {
+                        url            = oidc_provider.url
+                        clientIdList   = oidc_provider.clientIdList
+                        thumbprintList = oidc_provider.thumbprintList
+                    }
+                }
+            } for aws_account in aws_accounts
+          ]
+
+          items = openidconnectproviders + providerconfigs
+
+  - step: automatically-detect-ready-composed-resources
+    functionRef:
+      name: {{ .Values.composition.autoReadyFunctionRef }}
