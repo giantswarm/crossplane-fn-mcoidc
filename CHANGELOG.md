@@ -13,4 +13,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add support for AWSManagedClusters alongside AWSClusters for account discovery.
 
-[Unreleased]: https://github.com/giantswarm/REPOSITORY_NAME/tree/main
+[Unreleased]: https://github.com/giantswarm/crossplane-fn-mcoidc/tree/main
