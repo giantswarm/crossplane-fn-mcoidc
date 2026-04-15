@@ -55,8 +55,8 @@ github.com/fsnotify/fsnotify v1.9.0 h1:2Ml+OJNzbYCTzsxtv8vKSFD9PbJjmhYF14k/jKC7S
 github.com/fsnotify/fsnotify v1.9.0/go.mod h1:8jBTzvmWwFyi3Pb8djgCCO5IBqzKJ/Jwo8TRcHyHii0=
 github.com/fxamacker/cbor/v2 v2.9.0 h1:NpKPmjDBgUfBms6tr6JZkTHtfFGcMKsw3eGcmD/sapM=
 github.com/fxamacker/cbor/v2 v2.9.0/go.mod h1:vM4b+DJCtHn+zz7h3FFp/hDAI9WNWCsZj23V5ytsSxQ=
-github.com/giantswarm/xfnlib v0.0.0-20250514065918-60f555c5e228 h1:P0dxd9lry8MFc2oO376zukYbho2ZKGPvitvjqfF/9ZE=
-github.com/giantswarm/xfnlib v0.0.0-20250514065918-60f555c5e228/go.mod h1:0XJReMOGg0cuYGaFTNiuc5kCVg2WLmJAAxexKVFodGA=
+github.com/giantswarm/xfnlib v0.0.0-20260105112726-0ff9c8e2066f h1:7VdSfpyyy6HoPE39XIL5xi5/aafGSEqV/IIYhSVFODU=
+github.com/giantswarm/xfnlib v0.0.0-20260105112726-0ff9c8e2066f/go.mod h1:0XJReMOGg0cuYGaFTNiuc5kCVg2WLmJAAxexKVFodGA=
 github.com/go-json-experiment/json v0.0.0-20250417205406-170dfdcf87d1 h1:+VexzzkMLb1tnvpuQdGT/DicIRW7MN8ozsXqBMgp0Hk=
 github.com/go-json-experiment/json v0.0.0-20250417205406-170dfdcf87d1/go.mod h1:TiCD2a1pcmjd7YnhGH0f/zKNcCD06B029pHhzV23c2M=
 github.com/go-logr/logr v1.4.3 h1:CjnDlHq8ikf6E492q6eKboGOC0T8CDaOvkHCIg8idEI=
