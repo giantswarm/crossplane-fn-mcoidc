@@ -59,7 +59,6 @@ The function employs a declarative approach to resource management:
 - **External Name Annotation**: Uses Crossplane's external-name annotation to establish the correct ARN references for imported OIDC providers
 - **Idempotent Operations**: Ensures that repeated executions produce consistent results without duplicating resources
 
-
 ### Setting up
 
 You need to set the name in several places
