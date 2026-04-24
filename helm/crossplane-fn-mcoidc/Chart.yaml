@@ -2,14 +2,14 @@
 # for details and background.
 
 apiVersion: v2
-appVersion: 0.0.1
+appVersion: 0.1.0
 name: crossplane-fn-mcoidc
 description: Crossplane Composition Function for OIDC provider discovery across management cluster AWS accounts
 home: https://github.com/giantswarm/crossplane-fn-mcoidc
 icon: https://s.giantswarm.io/app-icons/crossplane/1/light.svg
 sources:
   - https://github.com/giantswarm/crossplane-fn-mcoidc
-version: 0.0.0
+version: 0.1.0
 annotations:
   io.giantswarm.application.audience: giantswarm
   io.giantswarm.application.managed: "false"
