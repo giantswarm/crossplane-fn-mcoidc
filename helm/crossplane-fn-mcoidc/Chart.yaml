@@ -9,7 +9,7 @@ home: https://github.com/giantswarm/crossplane-fn-mcoidc
 icon: https://s.giantswarm.io/app-icons/crossplane/1/light.svg
 sources:
   - https://github.com/giantswarm/crossplane-fn-mcoidc
-version: 0.0.0-dev
+version: 0.0.0
 annotations:
   io.giantswarm.application.audience: giantswarm
   io.giantswarm.application.managed: "false"
