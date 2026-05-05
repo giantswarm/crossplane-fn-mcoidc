@@ -1,4 +1,4 @@
-### Crossplane MC OIDC
+# Crossplane MC OIDC
 
 A Crossplane Composition Function that automates the setup of OpenID Connect (OIDC) trust relationships between a Management Cluster (MC) and multiple Workload Clusters (WCs) across different AWS accounts.
 
@@ -58,27 +58,3 @@ The function employs a declarative approach to resource management:
 - **ProviderConfig Creation**: Generates dedicated ProviderConfig resources for each target AWS account using the naming pattern `${mc_name}-${account_id}`
 - **External Name Annotation**: Uses Crossplane's external-name annotation to establish the correct ARN references for imported OIDC providers
 - **Idempotent Operations**: Ensures that repeated executions produce consistent results without duplicating resources
-
-### Setting up
-
-You need to set the name in several places
-
-- `go.mod` - change the name from `crossplane-fn-mcoidc` to something reflective of your function
-- `input/v1beta1/input.go` - change `+groupName=template.fn.giantswarm.io` to something unique for your function
-- `fn.go` - set `composedName` to the name of your function (I normally use basename $module)
-
-### Building
-
-When editing `input`, do not forget to run ``go generate ./...`` otherwise your input will be out of line.
-
-### Some suggestions for your README
-
-After you have created your new repository, you may want to add some of these badges to the top of your README.
-
-- **CircleCI:** After enabling builds for this repo via [this link](https://circleci.com/setup-project/gh/giantswarm/crossplane-fn-mcoidc), you can find badge code on [this page](https://app.circleci.com/settings/project/github/giantswarm/crossplane-fn-mcoidc/status-badges).
-
-- **Go reference:** use [this helper](https://pkg.go.dev/badge/) to create the markdown code.
-
-- **Go report card:** enter the module name on the [front page](https://goreportcard.com/) and hit "Generate report". Then use this markdown code for your badge: `[![Go report card](https://goreportcard.com/badge/github.com/giantswarm/crossplane-fn-mcoidc)](https://goreportcard.com/report/github.com/giantswarm/crossplane-fn-mcoidc)`
-
-- **Sourcegraph "used by N projects" badge**: for public Go repos only: `[![Sourcegraph](https://sourcegraph.com/github.com/giantswarm/crossplane-fn-mcoidc/-/badge.svg)](https://sourcegraph.com/github.com/giantswarm/crossplane-fn-mcoidc)`
