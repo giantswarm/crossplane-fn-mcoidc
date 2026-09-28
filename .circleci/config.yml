@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  architect: giantswarm/architect@7.0.0
+  architect: giantswarm/architect@10.11.1
 
 workflows:
   build-workflow:
@@ -49,6 +49,9 @@ jobs:
     steps:
       - checkout
       - architect/image-prepare-tag
+      - run:
+          name: Copy the computed tag into the workspace root
+          command: cp /tmp/.docker_image_tag .docker_image_tag
       - persist_to_workspace:
           root: .
           paths:
