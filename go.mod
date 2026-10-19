@@ -3,7 +3,7 @@ module github.com/giantswarm/crossplane-fn-mcoidc
 go 1.25.0
 
 require (
-	github.com/alecthomas/kong v1.15.0
+	github.com/alecthomas/kong v1.16.1
 	github.com/crossplane/crossplane-runtime v1.20.11
 	github.com/crossplane/function-sdk-go v0.4.0
 	github.com/giantswarm/xfnlib v0.0.0-20260817122542-ca21ff4f962e
