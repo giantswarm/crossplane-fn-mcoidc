@@ -6,7 +6,7 @@ require (
 	github.com/alecthomas/kong v1.16.1
 	github.com/crossplane/crossplane-runtime v1.20.12
 	github.com/crossplane/function-sdk-go v0.4.0
-	github.com/giantswarm/xfnlib v0.0.0-20260817122542-ca21ff4f962e
+	github.com/giantswarm/xfnlib v0.0.0-20261022133053-9366b8293840
 	k8s.io/apimachinery v0.35.0
 	sigs.k8s.io/controller-runtime v0.20.4
 	sigs.k8s.io/controller-tools v0.20.1
