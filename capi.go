@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/crossplane/crossplane-runtime/pkg/logging"
+	"github.com/crossplane/crossplane-runtime/v2/pkg/logging"
 	kclient "github.com/giantswarm/xfnlib/pkg/auth/kubernetes"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
